@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meta Automator + Jev</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    :root {
+      --bg-canvas: #0c0e12;
+      --bg-surface: #151821;
+      --border-subtle: #242938;
+      --text-main: #f0f3f8;
+      --text-muted: #8b95a5;
+      --accent-primary: #3b66ff;
+      --status-success: #10b981;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: ui-monospace, Menlo, Monaco, Consolas, monospace;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: var(--bg-canvas);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      line-height: 1.4;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+    header {
+      padding: 10px 12px;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand-title {
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: -0.01em;
+    }
+    .worker-status {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background-color: var(--status-success);
+      display: inline-block;
+    }
+    nav.tabs {
+      display: flex;
+      background: #11141c;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    nav.tabs button {
+      flex: 1;
+      padding: 8px 4px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      cursor: pointer;
+      text-align: center;
+    }
+    nav.tabs button.active {
+      color: var(--text-main);
+      background: #1a202c;
+      border-bottom-color: var(--accent-primary);
+    }
+    main {
+      flex: 1;
+      padding: 14px;
+      overflow-y: auto;
+    }
+    .placeholder-panel {
+      border: 1px dashed var(--border-subtle);
+      border-radius: 6px;
+      padding: 20px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand-title">Meta Automator • Jev</div>
+    <div class="worker-status" id="worker-status-indicator">
+      <span class="status-dot"></span>
+      <span id="worker-status-text">SW Active</span>
+    </div>
+  </header>
+  <nav class="tabs" role="tablist" aria-label="Main Navigation">
+    <button role="tab" aria-selected="true" class="active" id="tab-queue">Queue</button>
+    <button role="tab" aria-selected="false" id="tab-create">Create</button>
+    <button role="tab" aria-selected="false" id="tab-downloads">Downloads</button>
+    <button role="tab" aria-selected="false" id="tab-settings">Settings</button>
+  </nav>
+  <main id="panel-content">
+    <div class="placeholder-panel">
+      <p>Scaffold shell ready. Waiting for domain module initialization.</p>
+    </div>
+  </main>
+  <script type="module" src="sidepanel.js"></script>
+</body>
+</html>
