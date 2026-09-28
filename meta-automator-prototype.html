@@ -1,0 +1,2107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meta Automator + 9router Jev • Side-Panel Prototype</title>
+  <style>
+    /* ==========================================================================
+       PROTOTYPE DESIGN SYSTEM TOKENS
+       ========================================================================== */
+    :root {
+      --bg-canvas: #0c0e12;
+      --bg-surface: #151821;
+      --bg-surface-elevated: #1d212d;
+      --bg-surface-active: #242938;
+      --bg-input: #11141c;
+      --border-subtle: #242938;
+      --border-strong: #363d52;
+      --border-focus: #4f68ff;
+      --text-main: #f0f3f8;
+      --text-muted: #8b95a5;
+      --text-subtle: #576071;
+      --accent-primary: #3b66ff;
+      --accent-hover: #4e75ff;
+      --accent-subtle: rgba(59, 102, 255, 0.15);
+      --jev-purple: #9d5cff;
+      --jev-purple-subtle: rgba(157, 92, 255, 0.15);
+      --status-success: #10b981;
+      --status-success-subtle: rgba(16, 185, 129, 0.15);
+      --status-warning: #f59e0b;
+      --status-warning-subtle: rgba(245, 158, 11, 0.15);
+      --status-danger: #ef4444;
+      --status-danger-subtle: rgba(239, 68, 68, 0.15);
+      --radius-sm: 4px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+      --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-canvas);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      line-height: 1.45;
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: 72px; /* space for floating bar */
+    }
+
+    /* Top Prototype Notice Banner */
+    .prototype-banner {
+      background: linear-gradient(90deg, #1f1203, #2b1704);
+      border-bottom: 1px solid rgba(245, 158, 11, 0.3);
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #fbbf24;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .prototype-banner .badge {
+      background: rgba(245, 158, 11, 0.2);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+    }
+    .prototype-banner .thai-note {
+      color: #fde68a;
+      opacity: 0.85;
+      font-size: 10.5px;
+    }
+
+    /* Outer Wrapper for responsive preview */
+    .app-viewport {
+      display: flex;
+      justify-content: center;
+      padding: 16px;
+      min-height: calc(100vh - 110px);
+    }
+    .app-viewport.mode-sidepanel .panel-container {
+      width: 420px;
+      max-width: 100%;
+    }
+    .app-viewport.mode-desktop .panel-container {
+      width: 1040px;
+      max-width: 100%;
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel-container {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Side Panel Header */
+    .panel-header {
+      padding: 12px 14px;
+      background: var(--bg-surface-elevated);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 13.5px;
+      color: #fff;
+    }
+    .brand-title svg {
+      color: var(--accent-primary);
+    }
+    .brand-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .badge-jev {
+      background: var(--jev-purple-subtle);
+      color: #c084fc;
+      border: 1px solid rgba(157, 92, 255, 0.4);
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      font-size: 10px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      background: #10b981;
+      border-radius: 50%;
+      display: inline-block;
+      box-shadow: 0 0 6px #10b981;
+    }
+
+    /* Navigation Tabs */
+    .nav-tabs {
+      display: flex;
+      background: var(--bg-canvas);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 3px 6px;
+      gap: 4px;
+    }
+    .nav-tab-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 8px 6px;
+      border-radius: var(--radius-sm);
+      font-size: 11.5px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+    }
+    .nav-tab-btn:hover {
+      background: var(--bg-surface-elevated);
+      color: var(--text-main);
+    }
+    .nav-tab-btn.active {
+      background: var(--bg-surface);
+      color: #fff;
+      font-weight: 600;
+      box-shadow: var(--shadow-sm);
+      border-bottom: 2px solid var(--accent-primary);
+    }
+    .tab-counter {
+      background: var(--bg-surface-active);
+      color: var(--text-muted);
+      padding: 1px 5px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-family: var(--font-mono);
+    }
+    .nav-tab-btn.active .tab-counter {
+      background: var(--accent-subtle);
+      color: #93c5fd;
+    }
+
+    /* Main Tab Content Area */
+    .tab-body {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-height: 480px;
+      max-height: 720px;
+      overflow-y: auto;
+    }
+
+    /* Form & UI Primitives */
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .label {
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--text-main);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .label .helper {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: normal;
+    }
+    .input-text, .textarea, .select {
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 8px 10px;
+      border-radius: var(--radius-md);
+      font-family: inherit;
+      font-size: 12px;
+      outline: none;
+      transition: border-color 0.15s ease;
+      width: 100%;
+    }
+    .input-text:focus, .textarea:focus, .select:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 2px rgba(79, 104, 255, 0.2);
+    }
+    .textarea {
+      resize: vertical;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      line-height: 1.5;
+      min-height: 80px;
+    }
+    .input-text[readonly] {
+      background: #0f1218;
+      color: #94a3b8;
+      cursor: not-allowed;
+      border-style: dashed;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      text-decoration: none;
+      user-select: none;
+    }
+    .btn:focus-visible {
+      outline: 2px solid var(--border-focus);
+      outline-offset: 2px;
+    }
+    .btn-primary {
+      background: var(--accent-primary);
+      color: #fff;
+    }
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+    .btn-secondary {
+      background: var(--bg-surface-elevated);
+      color: var(--text-main);
+      border-color: var(--border-subtle);
+    }
+    .btn-secondary:hover {
+      background: var(--bg-surface-active);
+      border-color: var(--border-strong);
+    }
+    .btn-outline-purple {
+      background: var(--jev-purple-subtle);
+      color: #d8b4fe;
+      border-color: rgba(157, 92, 255, 0.4);
+    }
+    .btn-outline-purple:hover {
+      background: rgba(157, 92, 255, 0.25);
+    }
+    .btn-danger {
+      background: var(--status-danger-subtle);
+      color: #fca5a5;
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.25);
+    }
+    .btn-sm {
+      padding: 4px 8px;
+      font-size: 11px;
+      border-radius: var(--radius-sm);
+    }
+
+    /* 6-Mode Grid Switcher */
+    .mode-matrix {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      background: var(--bg-input);
+      padding: 6px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+    }
+    .mode-pill {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      border-radius: var(--radius-sm);
+      padding: 6px 4px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-size: 10.5px;
+      font-weight: 500;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .mode-pill:hover {
+      background: var(--bg-surface-elevated);
+      color: var(--text-main);
+    }
+    .mode-pill.active {
+      background: var(--accent-subtle);
+      border-color: var(--accent-primary);
+      color: #fff;
+    }
+    .mode-pill .mode-tag {
+      font-size: 9px;
+      font-family: var(--font-mono);
+      opacity: 0.8;
+    }
+
+    /* Media Type Radio Segmented */
+    .media-toggle {
+      display: flex;
+      background: var(--bg-input);
+      padding: 3px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      gap: 4px;
+    }
+    .media-toggle-btn {
+      flex: 1;
+      padding: 6px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      border-radius: var(--radius-sm);
+      font-size: 11.5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-weight: 500;
+    }
+    .media-toggle-btn.active {
+      background: var(--bg-surface-elevated);
+      color: #fff;
+      font-weight: 600;
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Cards & Containers */
+    .card {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+    }
+    .card-title {
+      font-size: 11.5px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Queue Item Row */
+    .queue-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .queue-item {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+      transition: border-color 0.15s ease;
+    }
+    .queue-item.running {
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 10px rgba(59, 102, 255, 0.2);
+    }
+    .queue-item.needs-review {
+      border-color: var(--status-warning);
+    }
+    .queue-item.failed {
+      border-color: var(--status-danger);
+    }
+    .queue-item-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+    .job-id {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      font-size: 10px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .status-badge.pending { background: var(--bg-surface-active); color: var(--text-muted); }
+    .status-badge.running { background: var(--accent-subtle); color: #93c5fd; }
+    .status-badge.completed { background: var(--status-success-subtle); color: #6ee7b7; }
+    .status-badge.failed { background: var(--status-danger-subtle); color: #fca5a5; }
+    .status-badge.needs-review { background: var(--status-warning-subtle); color: #fcd34d; }
+    .status-badge.paused { background: #374151; color: #d1d5db; }
+
+    .queue-prompt-text {
+      font-size: 11.5px;
+      color: var(--text-main);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      line-height: 1.4;
+    }
+    .queue-meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--text-muted);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 4px;
+    }
+    .jev-score-pill {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      color: #c084fc;
+      background: var(--jev-purple-subtle);
+      border: 1px solid rgba(157, 92, 255, 0.25);
+      padding: 1px 5px;
+      border-radius: var(--radius-sm);
+    }
+    .queue-actions {
+      display: flex;
+      gap: 4px;
+    }
+    .icon-btn {
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      border-radius: var(--radius-sm);
+      width: 22px;
+      height: 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 11px;
+    }
+    .icon-btn:hover {
+      background: var(--bg-surface-active);
+      color: var(--text-main);
+      border-color: var(--border-strong);
+    }
+
+    /* Downloads Grid */
+    .downloads-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .download-card {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .download-thumb {
+      height: 90px;
+      background: #11141c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .download-thumb svg {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .download-badge {
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      background: rgba(0,0,0,0.7);
+      color: #fff;
+      font-size: 9px;
+      font-family: var(--font-mono);
+      padding: 1px 4px;
+      border-radius: 2px;
+    }
+    .download-info {
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .download-filename {
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .download-meta {
+      font-size: 9.5px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* Simulation & Guided Walkthrough Bar */
+    .walkthrough-banner {
+      background: var(--jev-purple-subtle);
+      border: 1px dashed rgba(157, 92, 255, 0.4);
+      border-radius: var(--radius-md);
+      padding: 8px 10px;
+      font-size: 11px;
+      color: #e9d5ff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Floating Switcher & Controls Bar */
+    .floating-bar {
+      position: fixed;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(21, 24, 33, 0.95);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-strong);
+      border-radius: 30px;
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      z-index: 1000;
+    }
+    .floating-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .floating-label {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-right: 2px;
+    }
+    .floating-pill {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: 16px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .floating-pill:hover {
+      background: var(--bg-surface-active);
+      color: #fff;
+    }
+    .floating-pill.active {
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
+      color: #fff;
+    }
+    .floating-divider {
+      width: 1px;
+      height: 18px;
+      background: var(--border-strong);
+    }
+
+    /* ==========================================================================
+       VARIANT SPECIFIC STYLES
+       ========================================================================== */
+
+    /* VARIANT A: Technical Operator Stream (Linear Console) */
+    .variant-a .panel-container {
+      border-radius: 4px;
+      border-color: #2d3748;
+    }
+    .variant-a .nav-tabs {
+      background: #11141c;
+      border-bottom: 1px solid #2d3748;
+    }
+    .variant-a .nav-tab-btn {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      border-radius: 2px;
+    }
+    .variant-a .nav-tab-btn.active {
+      background: #1a202c;
+      border-bottom: 2px solid #3b82f6;
+    }
+    .variant-a .card {
+      border-radius: 4px;
+      border-color: #2d3748;
+      background: #161b26;
+    }
+    .variant-a .toolbar-strip {
+      background: #11141c;
+      border: 1px solid #2d3748;
+      border-radius: 4px;
+      padding: 6px;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    /* VARIANT B: Studio Cards & Visual Workspace */
+    .variant-b .panel-container {
+      border-radius: 16px;
+      border: 1px solid #3b4252;
+      background: #131722;
+    }
+    .variant-b .panel-header {
+      background: #1a2030;
+      border-bottom: 1px solid #3b4252;
+    }
+    .variant-b .nav-tabs {
+      padding: 6px 10px;
+      gap: 6px;
+      background: #0d1117;
+    }
+    .variant-b .nav-tab-btn {
+      border-radius: 20px;
+      padding: 6px 12px;
+    }
+    .variant-b .nav-tab-btn.active {
+      background: #2563eb;
+      color: #fff;
+      border-bottom: none;
+    }
+    .variant-b .queue-item {
+      border-radius: 12px;
+      background: #1e2436;
+      border: 1px solid #2e384d;
+      padding: 12px;
+    }
+    .variant-b .mode-matrix {
+      border-radius: 12px;
+      padding: 8px;
+    }
+    .variant-b .mode-pill {
+      border-radius: 8px;
+      padding: 8px 6px;
+    }
+
+    /* VARIANT C: Minimal Stepped Command Dock (Compact Modern) */
+    .variant-c .panel-container {
+      border-radius: 8px;
+      background: #0f1117;
+      border: 1px solid #232733;
+    }
+    .variant-c .panel-header {
+      background: #0f1117;
+      border-bottom: 1px solid #232733;
+    }
+    .variant-c .nav-tabs {
+      background: #0f1117;
+      border-bottom: 1px solid #232733;
+    }
+    .variant-c .nav-tab-btn.active {
+      background: transparent;
+      border-bottom: 2px solid #a855f7;
+      color: #d8b4fe;
+    }
+    .variant-c .queue-item {
+      border-left: 3px solid var(--border-strong);
+      border-radius: 4px;
+      background: #141721;
+    }
+    .variant-c .queue-item.running {
+      border-left-color: #a855f7;
+    }
+    .variant-c .queue-item.completed {
+      border-left-color: #10b981;
+    }
+
+    /* Desktop Inspector Column */
+    .desktop-inspector {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      max-height: 780px;
+      overflow-y: auto;
+    }
+    .inspector-state-pre {
+      background: #0a0c10;
+      border: 1px solid #222736;
+      border-radius: var(--radius-md);
+      padding: 10px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: #93c5fd;
+      max-height: 360px;
+      overflow: auto;
+      white-space: pre-wrap;
+    }
+
+    /* Progress bar */
+    .progress-bar-wrap {
+      width: 100%;
+      height: 4px;
+      background: #1e2433;
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--accent-primary);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    .progress-bar-fill.animated {
+      background: linear-gradient(90deg, #3b66ff, #9d5cff, #3b66ff);
+      background-size: 200% 100%;
+      animation: progressShim 1.5s infinite linear;
+    }
+    @keyframes progressShim {
+      0% { background-position: 100% 0; }
+      100% { background-position: -100% 0; }
+    }
+
+    /* Live Toast / Alert */
+    .toast-msg {
+      position: fixed;
+      top: 45px;
+      right: 20px;
+      background: #1f2937;
+      border: 1px solid #374151;
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      box-shadow: var(--shadow-lg);
+      z-index: 1000;
+      display: none;
+      animation: fadeIn 0.2s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="variant-a">
+
+  <!-- Top Prototype Disclaimer Banner -->
+  <div class="prototype-banner">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span class="badge">PROTOTYPE • SIMULATED</span>
+      <span>Stand-alone Side Panel Prototype (Zero Real API / No Meta AI Calls)</span>
+    </div>
+    <span class="thai-note">โหมดจำลองส่วนต่อประสาน: ทดสอบโฟลว์งานก่อนเชื่อมต่อจริง</span>
+  </div>
+
+  <div class="toast-msg" id="toast">Notice message here</div>
+
+  <!-- App Viewport Container -->
+  <main class="app-viewport mode-sidepanel" id="appViewport">
+    
+    <!-- LEFT: SIDE PANEL COMPONENT -->
+    <div class="panel-container" id="sidePanelRoot">
+      
+      <!-- Panel Header -->
+      <header class="panel-header">
+        <div class="brand-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+            <path d="M7 8h10M7 12h10M7 16h6"></path>
+          </svg>
+          <span>Meta Automator</span>
+          <span style="font-size: 10px; color: var(--text-muted); font-weight: normal;">v2.0-mock</span>
+        </div>
+        <div class="brand-meta">
+          <span class="badge-jev" title="9router Jev Decision Gate Active">
+            <span class="pulse-dot"></span> Jev 1.13 Free
+          </span>
+        </div>
+      </header>
+
+      <!-- Navigation Tabs -->
+      <nav class="nav-tabs" role="tablist" aria-label="Main Navigation">
+        <button class="nav-tab-btn active" role="tab" aria-selected="true" data-tab="create" id="tabBtnCreate">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          <span>Create</span>
+        </button>
+        <button class="nav-tab-btn" role="tab" aria-selected="false" data-tab="queue" id="tabBtnQueue">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          <span>Queue</span>
+          <span class="tab-counter" id="queueCounter">3</span>
+        </button>
+        <button class="nav-tab-btn" role="tab" aria-selected="false" data-tab="downloads" id="tabBtnDownloads">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          <span>Downloads</span>
+          <span class="tab-counter" id="downloadsCounter">2</span>
+        </button>
+        <button class="nav-tab-btn" role="tab" aria-selected="false" data-tab="settings" id="tabBtnSettings">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Settings</span>
+        </button>
+      </nav>
+
+      <!-- TAB 1: CREATE -->
+      <section class="tab-body" id="tabContentCreate">
+        
+        <!-- Guided Walkthrough Quick Launcher -->
+        <div class="walkthrough-banner">
+          <div>
+            <strong>Interactive Prototype Tour</strong>
+            <div style="font-size: 10px; opacity: 0.85;">คลิกปุ่มเพื่อทดสอบ 6 โหมด + Jev Score</div>
+          </div>
+          <button class="btn btn-sm btn-outline-purple" id="btnRunWalkthrough">Play Demo</button>
+        </div>
+
+        <!-- 1. Media Type Selector (Image vs Video) -->
+        <div class="form-group">
+          <div class="section-title">
+            <span>1. Media Target (เป้าหมายสื่อ)</span>
+            <span style="font-size: 10px; font-weight: normal; color: var(--text-muted);">Meta AI Canvas</span>
+          </div>
+          <div class="media-toggle" role="radiogroup">
+            <button class="media-toggle-btn active" data-media="image" id="btnMediaImage">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <span>Image (ภาพนิ่ง)</span>
+            </button>
+            <button class="media-toggle-btn" data-media="video" id="btnMediaVideo">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+              <span>Video (วิดีโอแอนิเมชัน)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. Workflow Mode Selector (Text vs Single vs Paired) -->
+        <div class="form-group">
+          <div class="section-title">
+            <span>2. Generation Mode (โหมดเชื่อมโยง)</span>
+            <span id="lblModeSummary" style="color: var(--accent-hover); font-size: 10.5px;">Text-Only</span>
+          </div>
+          <div class="mode-matrix">
+            <button class="mode-pill active" data-mode="text" id="pillModeText">
+              <span>Text Only</span>
+              <span class="mode-tag">1:0 ไม่มีรูปอ้างอิง</span>
+            </button>
+            <button class="mode-pill" data-mode="single" id="pillModeSingle">
+              <span>Single Ref</span>
+              <span class="mode-tag">1:N ใช้รูปเดิมซ้ำ</span>
+            </button>
+            <button class="mode-pill" data-mode="paired" id="pillModePaired">
+              <span>Paired 1:1</span>
+              <span class="mode-tag">N:N รูปคู่ข้อความ</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. Reference Asset Area (conditional on Single or Paired) -->
+        <div class="form-group" id="refAssetContainer" style="display: none;">
+          <div class="label">
+            <span id="refAssetTitle">Reference Image (รูปอ้างอิง)</span>
+            <span class="helper" id="refAssetHint">Upload or load mock assets</span>
+          </div>
+          <div class="card" style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div id="refThumbPreview" style="width: 36px; height: 36px; background: #1f2937; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--text-muted); border: 1px solid var(--border-subtle);">
+                REF
+              </div>
+              <div>
+                <div id="refFileName" style="font-weight: 500; font-size: 11px;">portrait_cyber_01.png</div>
+                <div id="refFileSize" style="font-size: 10px; color: var(--text-muted);">1.4 MB • 1024×1024</div>
+              </div>
+            </div>
+            <button class="btn btn-sm btn-secondary" id="btnCycleMockRef">Change Asset</button>
+          </div>
+        </div>
+
+        <!-- 4. Prompts Input Area -->
+        <div class="form-group">
+          <div class="label">
+            <span>Prompts (รายการคำสั่งสร้างสื่อ)</span>
+            <span class="helper">1 line = 1 generation job</span>
+          </div>
+          <textarea class="textarea" id="txtPrompts" placeholder="Enter one prompt per line..."></textarea>
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 10.5px; color: var(--text-muted);">
+            <span id="promptLineCount">3 prompts ready</span>
+            <div style="display: flex; gap: 6px;">
+              <button class="btn btn-sm btn-secondary" id="btnLoadSamplePrompts">Load Samples</button>
+              <button class="btn btn-sm btn-secondary" id="btnOpenPromptHelper">Template Helper</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Local Prompt Helper Accordion (NO LLM, deterministic template helper) -->
+        <div class="card" id="promptHelperCard" style="display: none; border-color: rgba(79, 104, 255, 0.4);">
+          <div class="card-title" style="color: #93c5fd;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg>
+            <span>Deterministic Local Prompt Helper (ตัวช่วยจัดโครงสร้างคำสั่ง)</span>
+          </div>
+          <div style="font-size: 10.5px; color: var(--text-muted); margin-bottom: 8px;">
+            สร้าง template ในเครื่องโดยไม่ต้องต่อโมเดลสร้างข้อความภายนอก (Jev ใช้ประเมินคะแนน ไม่ได้สร้างข้อความ)
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px;">
+            <select class="select" id="selStyleTheme">
+              <option value="cinematic">Cinematic 35mm film, moody</option>
+              <option value="minimalist">Minimalist Scandinavian clean</option>
+              <option value="cyberpunk">Cyberpunk neon rain aesthetic</option>
+              <option value="thai_art">Contemporary Thai traditional modern</option>
+            </select>
+            <select class="select" id="selLighting">
+              <option value="golden_hour">Golden hour warm glow</option>
+              <option value="studio_soft">Studio softbox diffusion</option>
+              <option value="dramatic">High-contrast chiaroscuro</option>
+            </select>
+          </div>
+          <button class="btn btn-sm btn-secondary" id="btnAppendTemplatePrompt" style="width: 100%;">
+            Append Formatted Prompt to Editor
+          </button>
+        </div>
+
+        <!-- Jev Pre-check Simulation Panel -->
+        <div class="card" style="background: rgba(157, 92, 255, 0.08); border-color: rgba(157, 92, 255, 0.3);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <div class="card-title" style="margin-bottom: 0; color: #d8b4fe;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <span>Jev 1.13 Quality Pre-Check</span>
+            </div>
+            <button class="btn btn-sm btn-outline-purple" id="btnEvalJev">Run Evaluation</button>
+          </div>
+          <div id="jevEvalResult" style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+            Simulate 9router System One typed rubric scoring (`choice`, `score`, `noul`) before enqueueing.
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display: flex; gap: 8px; margin-top: auto;">
+          <button class="btn btn-secondary" id="btnImportTxt" style="flex: 1;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+            <span>Import .txt</span>
+          </button>
+          <button class="btn btn-primary" id="btnEnqueuePrompts" style="flex: 2;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            <span>Add to Queue (<span id="btnEnqueueCount">3</span> jobs)</span>
+          </button>
+        </div>
+
+      </section>
+
+      <!-- TAB 2: QUEUE -->
+      <section class="tab-body" id="tabContentQueue" style="display: none;">
+        
+        <!-- Queue Top Controls -->
+        <div class="toolbar-strip" style="justify-content: space-between;">
+          <div style="display: flex; gap: 4px;">
+            <button class="btn btn-sm btn-primary" id="btnToggleQueue">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <span id="lblToggleQueue">Start Queue</span>
+            </button>
+            <button class="btn btn-sm btn-secondary" id="btnStepQueue" title="Execute 1 job simulation">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+              <span>Step 1 Job</span>
+            </button>
+          </div>
+          <div style="display: flex; gap: 4px;">
+            <button class="btn btn-sm btn-danger" id="btnSimulateError" title="Simulate 429 Challenge Pause">
+              <span>Simulate 429</span>
+            </button>
+            <button class="btn btn-sm btn-secondary" id="btnClearCompleted" title="Clear Completed Jobs">
+              <span>Clear Done</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Overall Progress Bar -->
+        <div class="card" style="padding: 8px 10px;">
+          <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;">
+            <span id="queueProgressLabel">Queue Progress: 1 of 4 Completed</span>
+            <span style="font-family: var(--font-mono); color: var(--accent-hover);" id="queueProgressPct">25%</span>
+          </div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-fill" id="queueProgressBar" style="width: 25%;"></div>
+          </div>
+        </div>
+
+        <!-- Active / Paused Status Alert -->
+        <div id="queueStatusAlert" style="display: none; padding: 6px 10px; border-radius: 4px; font-size: 11px; font-weight: 500;"></div>
+
+        <!-- Queue Items List -->
+        <div class="queue-list" id="queueListContainer">
+          <!-- Rendered dynamically -->
+        </div>
+
+      </section>
+
+      <!-- TAB 3: DOWNLOADS -->
+      <section class="tab-body" id="tabContentDownloads" style="display: none;">
+        
+        <div class="toolbar-strip" style="justify-content: space-between;">
+          <div style="display: flex; gap: 4px;">
+            <button class="btn btn-sm btn-secondary" id="btnFilterAllMedia">All (<span id="cntAllDownloads">2</span>)</button>
+            <button class="btn btn-sm btn-secondary" id="btnFilterImages">Images</button>
+            <button class="btn btn-sm btn-secondary" id="btnFilterVideos">Videos</button>
+          </div>
+          <div style="display: flex; gap: 4px;">
+            <button class="btn btn-sm btn-primary" id="btnDownloadAll">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              <span>Download All</span>
+            </button>
+            <button class="btn btn-sm btn-secondary" id="btnExportCsv">
+              <span>Export CSV</span>
+            </button>
+          </div>
+        </div>
+
+        <div style="font-size: 10.5px; color: var(--text-muted);">
+          ไฟล์สื่อจำลองที่สร้างเสร็จแล้ว (Mock outputs ready for selective export). ข้อมูลส่งออกปลอดภัย ไม่มี API Key
+        </div>
+
+        <div class="downloads-grid" id="downloadsGridContainer">
+          <!-- Rendered dynamically -->
+        </div>
+
+      </section>
+
+      <!-- TAB 4: SETTINGS (9router Jev Pinned) -->
+      <section class="tab-body" id="tabContentSettings" style="display: none;">
+        
+        <div class="card" style="border-color: rgba(157, 92, 255, 0.3);">
+          <div class="card-title" style="color: #c084fc;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span>Pinned 9router Target (Endpoint คงที่ ไม่อนุญาตเปลี่ยนปลายทาง)</span>
+          </div>
+          <div class="form-group" style="margin-top: 6px;">
+            <label class="label">
+              <span>System One API Endpoint</span>
+              <span class="helper">Strict Pinned Policy</span>
+            </label>
+            <input type="text" class="input-text" id="cfgEndpoint" value="https://9router.bangkhan.com/v1/systemone" readonly>
+            <div style="font-size: 10px; color: #94a3b8;">
+              🔒 ล็อกตายตัวเพื่อความปลอดภัย ไม่อนุญาตให้เปลี่ยน URL ป้องกัน credentialรั่วไหลออกนอกโดเมนที่รับรอง
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="label">
+            <span>Verified Model ID</span>
+            <span class="helper">Technical identifier</span>
+          </label>
+          <input type="text" class="input-text" id="cfgModelId" value="jev-latest" readonly>
+          <div style="font-size: 10px; color: var(--text-muted);">
+            หมายเหตุ: ป้าย "Jev 1.13 Free" ในการตลาดเป็นชื่อแสดงผล ID ทางการในการส่งคำขอคือ <code>jev-latest</code>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="label">
+            <span>Personal API Key</span>
+            <span class="helper">Masked & Extension-Local Only</span>
+          </label>
+          <div style="display: flex; gap: 6px;">
+            <input type="password" class="input-text" id="cfgApiKey" value="sk-9r-sample-key-mock-valid-3982">
+            <button class="btn btn-secondary btn-sm" id="btnToggleKeyMask">Show</button>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px;">
+            <span style="font-size: 10px; color: var(--text-muted);">Never synced or sent to host page</span>
+            <button class="btn btn-sm btn-secondary" id="btnSetDummyKey" style="font-size: 10px; padding: 2px 6px;">Insert Dummy Key</button>
+          </div>
+        </div>
+
+        <div class="card" style="background: rgba(16, 185, 129, 0.05); border-color: rgba(16, 185, 129, 0.2);">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-weight: 600; font-size: 11.5px; color: #6ee7b7;">Connection Test (ทดสอบสัญญาณ)</div>
+              <div style="font-size: 10px; color: var(--text-muted);">จำลองการยิง ping ไปยัง 9router</div>
+            </div>
+            <button class="btn btn-sm btn-primary" id="btnTestConnection">Test Ping</button>
+          </div>
+          <div id="testPingOutput" style="margin-top: 8px; font-family: var(--font-mono); font-size: 10.5px; color: #94a3b8; display: none;">
+            <!-- Output from simulated ping -->
+          </div>
+        </div>
+
+        <div class="form-group" style="border-top: 1px solid var(--border-subtle); padding-top: 10px;">
+          <div class="label">
+            <span>Security & Privacy Consent</span>
+          </div>
+          <label style="display: flex; align-items: flex-start; gap: 8px; font-size: 11px; color: var(--text-muted); cursor: pointer;">
+            <input type="checkbox" id="chkConsent" checked style="margin-top: 2px;">
+            <span>ฉันยินยอมให้ส่วนขยายส่งเฉพาะข้อความ prompt ไปประเมินความชัดเจนที่ 9router (ไม่ส่งไฟล์ภาพและไม่เก็บประวัติถาวร)</span>
+          </label>
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-top: auto;">
+          <button class="btn btn-secondary" id="btnResetSettings" style="flex: 1;">Reset Defaults</button>
+          <button class="btn btn-primary" id="btnSaveSettings" style="flex: 2;">Save Settings</button>
+        </div>
+
+      </section>
+
+    </div>
+
+    <!-- RIGHT: DESKTOP WORKSPACE / INSPECTOR (Visible in Desktop Canvas View) -->
+    <div class="desktop-inspector" id="desktopInspector" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 8px;">
+        <div>
+          <h2 style="font-size: 14px; font-weight: 600;">Desktop Workspace & In-Memory State Telemetry</h2>
+          <div style="font-size: 11px; color: var(--text-muted);">Real-time inspection of client-side state machine (No persistence)</div>
+        </div>
+        <span class="badge" style="background: rgba(59, 102, 255, 0.15); color: #93c5fd; padding: 3px 8px; border-radius: 4px; font-family: var(--font-mono);">IN-MEMORY ACTIVE</span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div class="card">
+          <div class="card-title">Active Platform Target</div>
+          <div style="font-size: 12px; line-height: 1.6;">
+            <div>Target Domain: <strong style="color: #60a5fa;">https://www.meta.ai/</strong></div>
+            <div>Provider Adapter: <code>meta-ai-v1-mock</code></div>
+            <div>Status: <span style="color: #10b981;">● Standby (Safe Sandbox)</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Jev 1.13 Decision Router</div>
+          <div style="font-size: 12px; line-height: 1.6;">
+            <div>Host: <code>9router.bangkhan.com</code></div>
+            <div>Decisions Handled: <strong>choice, score, noul</strong></div>
+            <div>Simulated Latency: <span style="color: #c084fc;">~140 ms</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">
+          <span>Live In-Memory State Inspector</span>
+          <button class="btn btn-sm btn-secondary" id="btnCopyState">Copy JSON</button>
+        </div>
+        <pre class="inspector-state-pre" id="stateTelemetryPre"></pre>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Floating Switcher & Control Dock -->
+  <footer class="floating-bar" role="toolbar" aria-label="Prototype Navigation and Variant Controls">
+    <div class="floating-group">
+      <span class="floating-label">Variant:</span>
+      <button class="floating-pill active" data-v="A" id="btnVarA" title="Operator Console: Linear high-density layout">A: Console</button>
+      <button class="floating-pill" data-v="B" id="btnVarB" title="Studio Cards: Visual feed & media inspector">B: Studio</button>
+      <button class="floating-pill" data-v="C" id="btnVarC" title="Minimal Dock: Command sheet layout">C: Minimal</button>
+    </div>
+
+    <div class="floating-divider"></div>
+
+    <div class="floating-group">
+      <span class="floating-label">View:</span>
+      <button class="floating-pill active" data-view="sidepanel" id="btnViewSidepanel">420px Panel</button>
+      <button class="floating-pill" data-view="desktop" id="btnViewDesktop">Desktop Canvas</button>
+    </div>
+
+    <div class="floating-divider"></div>
+
+    <div class="floating-group">
+      <button class="floating-pill" id="btnResetState" style="background: rgba(239,68,68,0.15); color: #fca5a5; border-color: rgba(239,68,68,0.3);">
+        Reset State
+      </button>
+    </div>
+  </footer>
+
+  <!-- ==========================================================================
+       PROTOTYPE LOGIC & IN-MEMORY STATE MACHINE
+       ========================================================================== -->
+  <script>
+    // Pure In-Memory State Store (Throwaway Prototype Contract)
+    const store = {
+      variant: 'A',
+      viewport: 'sidepanel',
+      activeTab: 'create',
+      mediaType: 'image', // 'image' | 'video'
+      mode: 'text',       // 'text' | 'single' | 'paired'
+      queueRunning: false,
+      queueTimer: null,
+      refIndex: 0,
+      
+      sampleRefs: [
+        { name: 'portrait_cyber_01.png', size: '1.4 MB', dim: '1024×1024', color: '#3b82f6' },
+        { name: 'product_bottle_clean.png', size: '2.1 MB', dim: '1536×1024', color: '#10b981' },
+        { name: 'thai_temple_sunset.png', size: '3.0 MB', dim: '1920×1080', color: '#f59e0b' }
+      ],
+
+      queue: [
+        {
+          id: 'JOB-201',
+          mediaType: 'image',
+          mode: 'text',
+          prompt: 'A sleek ceramic coffee cup with steam curling into morning light, macro lens depth of field',
+          refAsset: null,
+          status: 'completed',
+          progress: 100,
+          jevScore: 94,
+          jevDecision: 'choice: photorealistic, score: 94/100',
+          createdAt: '15:30:10'
+        },
+        {
+          id: 'JOB-202',
+          mediaType: 'image',
+          mode: 'single',
+          prompt: 'A futuristic android barista preparing espresso in neon Tokyo cafe, volumetric fog',
+          refAsset: 'portrait_cyber_01.png',
+          status: 'running',
+          progress: 45,
+          jevScore: 89,
+          jevDecision: 'choice: scifi_portrait, score: 89/100',
+          createdAt: '15:31:02'
+        },
+        {
+          id: 'JOB-203',
+          mediaType: 'video',
+          mode: 'text',
+          prompt: 'Slow motion rain ripples on neon pavement at twilight, camera panning upwards',
+          refAsset: null,
+          status: 'pending',
+          progress: 0,
+          jevScore: 91,
+          jevDecision: 'choice: motion_cinematic, score: 91/100',
+          createdAt: '15:31:40'
+        },
+        {
+          id: 'JOB-204',
+          mediaType: 'image',
+          mode: 'paired',
+          prompt: 'Traditional Thai silk pattern woven with subtle fiber optic threads, gold and azure accents',
+          refAsset: 'thai_temple_sunset.png',
+          status: 'needs-review',
+          progress: 0,
+          jevScore: 68,
+          jevDecision: 'noul: Thai text ambiguity, operator verification suggested',
+          createdAt: '15:32:15'
+        }
+      ],
+
+      downloads: [
+        {
+          id: 'DL-801',
+          jobId: 'JOB-201',
+          filename: 'meta_img_JOB-201.png',
+          mediaType: 'image',
+          resolution: '1024×1024',
+          seed: '84910283',
+          prompt: 'A sleek ceramic coffee cup with steam curling into morning light...',
+          accentColor: '#3b82f6',
+          timestamp: '15:30:45'
+        },
+        {
+          id: 'DL-802',
+          jobId: 'JOB-199',
+          filename: 'meta_vid_JOB-199.mp4',
+          mediaType: 'video',
+          resolution: '1080p 24fps',
+          seed: '44819012',
+          prompt: 'Golden hour drone swoop through misty pine forest valley...',
+          accentColor: '#10b981',
+          timestamp: '15:28:12'
+        }
+      ],
+
+      settings: {
+        endpoint: 'https://9router.bangkhan.com/v1/systemone',
+        modelId: 'jev-latest',
+        apiKey: 'sk-9r-sample-key-mock-valid-3982',
+        consentGiven: true,
+        timeoutMs: 5000,
+        lastPingStatus: null
+      }
+    };
+
+    // ==========================================================================
+    // DOM ELEMENTS
+    // ==========================================================================
+    const els = {
+      appViewport: document.getElementById('appViewport'),
+      desktopInspector: document.getElementById('desktopInspector'),
+      stateTelemetryPre: document.getElementById('stateTelemetryPre'),
+      toast: document.getElementById('toast'),
+
+      // Tabs
+      tabBtnCreate: document.getElementById('tabBtnCreate'),
+      tabBtnQueue: document.getElementById('tabBtnQueue'),
+      tabBtnDownloads: document.getElementById('tabBtnDownloads'),
+      tabBtnSettings: document.getElementById('tabBtnSettings'),
+      tabContentCreate: document.getElementById('tabContentCreate'),
+      tabContentQueue: document.getElementById('tabContentQueue'),
+      tabContentDownloads: document.getElementById('tabContentDownloads'),
+      tabContentSettings: document.getElementById('tabContentSettings'),
+
+      // Counters
+      queueCounter: document.getElementById('queueCounter'),
+      downloadsCounter: document.getElementById('downloadsCounter'),
+      cntAllDownloads: document.getElementById('cntAllDownloads'),
+
+      // Create Controls
+      btnMediaImage: document.getElementById('btnMediaImage'),
+      btnMediaVideo: document.getElementById('btnMediaVideo'),
+      pillModeText: document.getElementById('pillModeText'),
+      pillModeSingle: document.getElementById('pillModeSingle'),
+      pillModePaired: document.getElementById('pillModePaired'),
+      lblModeSummary: document.getElementById('lblModeSummary'),
+      refAssetContainer: document.getElementById('refAssetContainer'),
+      refThumbPreview: document.getElementById('refThumbPreview'),
+      refFileName: document.getElementById('refFileName'),
+      refFileSize: document.getElementById('refFileSize'),
+      btnCycleMockRef: document.getElementById('btnCycleMockRef'),
+      txtPrompts: document.getElementById('txtPrompts'),
+      promptLineCount: document.getElementById('promptLineCount'),
+      btnEnqueueCount: document.getElementById('btnEnqueueCount'),
+      btnEnqueuePrompts: document.getElementById('btnEnqueuePrompts'),
+      btnLoadSamplePrompts: document.getElementById('btnLoadSamplePrompts'),
+      btnOpenPromptHelper: document.getElementById('btnOpenPromptHelper'),
+      promptHelperCard: document.getElementById('promptHelperCard'),
+      selStyleTheme: document.getElementById('selStyleTheme'),
+      selLighting: document.getElementById('selLighting'),
+      btnAppendTemplatePrompt: document.getElementById('btnAppendTemplatePrompt'),
+      btnImportTxt: document.getElementById('btnImportTxt'),
+      btnEvalJev: document.getElementById('btnEvalJev'),
+      jevEvalResult: document.getElementById('jevEvalResult'),
+      btnRunWalkthrough: document.getElementById('btnRunWalkthrough'),
+
+      // Queue Controls
+      btnToggleQueue: document.getElementById('btnToggleQueue'),
+      lblToggleQueue: document.getElementById('lblToggleQueue'),
+      btnStepQueue: document.getElementById('btnStepQueue'),
+      btnSimulateError: document.getElementById('btnSimulateError'),
+      btnClearCompleted: document.getElementById('btnClearCompleted'),
+      queueListContainer: document.getElementById('queueListContainer'),
+      queueProgressBar: document.getElementById('queueProgressBar'),
+      queueProgressPct: document.getElementById('queueProgressPct'),
+      queueProgressLabel: document.getElementById('queueProgressLabel'),
+      queueStatusAlert: document.getElementById('queueStatusAlert'),
+
+      // Downloads
+      downloadsGridContainer: document.getElementById('downloadsGridContainer'),
+      btnFilterAllMedia: document.getElementById('btnFilterAllMedia'),
+      btnFilterImages: document.getElementById('btnFilterImages'),
+      btnFilterVideos: document.getElementById('btnFilterVideos'),
+      btnDownloadAll: document.getElementById('btnDownloadAll'),
+      btnExportCsv: document.getElementById('btnExportCsv'),
+
+      // Settings
+      cfgEndpoint: document.getElementById('cfgEndpoint'),
+      cfgModelId: document.getElementById('cfgModelId'),
+      cfgApiKey: document.getElementById('cfgApiKey'),
+      btnToggleKeyMask: document.getElementById('btnToggleKeyMask'),
+      btnSetDummyKey: document.getElementById('btnSetDummyKey'),
+      btnTestConnection: document.getElementById('btnTestConnection'),
+      testPingOutput: document.getElementById('testPingOutput'),
+      chkConsent: document.getElementById('chkConsent'),
+      btnSaveSettings: document.getElementById('btnSaveSettings'),
+      btnResetSettings: document.getElementById('btnResetSettings'),
+
+      // Floating Switcher
+      btnVarA: document.getElementById('btnVarA'),
+      btnVarB: document.getElementById('btnVarB'),
+      btnVarC: document.getElementById('btnVarC'),
+      btnViewSidepanel: document.getElementById('btnViewSidepanel'),
+      btnViewDesktop: document.getElementById('btnViewDesktop'),
+      btnResetState: document.getElementById('btnResetState'),
+      btnCopyState: document.getElementById('btnCopyState')
+    };
+
+    // ==========================================================================
+    // NOTIFICATIONS & HELPERS
+    // ==========================================================================
+    function showToast(msg) {
+      els.toast.textContent = msg;
+      els.toast.style.display = 'block';
+      setTimeout(() => { els.toast.style.display = 'none'; }, 2600);
+    }
+
+    function syncUrlParams() {
+      const url = new URL(window.location);
+      url.searchParams.set('variant', store.variant);
+      url.searchParams.set('view', store.viewport);
+      url.searchParams.set('tab', store.activeTab);
+      window.history.replaceState({}, '', url);
+    }
+
+    function readUrlParams() {
+      const params = new URLSearchParams(window.location.search);
+      const v = params.get('variant');
+      if (['A', 'B', 'C'].includes(v)) store.variant = v;
+      const view = params.get('view');
+      if (['sidepanel', 'desktop'].includes(view)) store.viewport = view;
+      const tab = params.get('tab');
+      if (['create', 'queue', 'downloads', 'settings'].includes(tab)) store.activeTab = tab;
+    }
+
+    // ==========================================================================
+    // RENDER FUNCTIONS
+    // ==========================================================================
+    function renderVariantAndTheme() {
+      document.body.className = `variant-${store.variant.toLowerCase()}`;
+      [els.btnVarA, els.btnVarB, els.btnVarC].forEach(b => {
+        b.classList.toggle('active', b.dataset.v === store.variant);
+      });
+
+      // Viewport mode
+      els.appViewport.className = `app-viewport mode-${store.viewport}`;
+      els.btnViewSidepanel.classList.toggle('active', store.viewport === 'sidepanel');
+      els.btnViewDesktop.classList.toggle('active', store.viewport === 'desktop');
+      els.desktopInspector.style.display = (store.viewport === 'desktop') ? 'flex' : 'none';
+
+      syncUrlParams();
+      renderTelemetry();
+    }
+
+    function renderTabs() {
+      const tabs = [
+        { id: 'create', btn: els.tabBtnCreate, content: els.tabContentCreate },
+        { id: 'queue', btn: els.tabBtnQueue, content: els.tabContentQueue },
+        { id: 'downloads', btn: els.tabBtnDownloads, content: els.tabContentDownloads },
+        { id: 'settings', btn: els.tabBtnSettings, content: els.tabContentSettings }
+      ];
+
+      tabs.forEach(t => {
+        const isActive = (store.activeTab === t.id);
+        t.btn.classList.toggle('active', isActive);
+        t.btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        t.content.style.display = isActive ? 'flex' : 'none';
+      });
+
+      syncUrlParams();
+      renderTelemetry();
+    }
+
+    function renderCounters() {
+      const pendingOrRunning = store.queue.filter(j => j.status === 'pending' || j.status === 'running').length;
+      els.queueCounter.textContent = store.queue.length;
+      els.downloadsCounter.textContent = store.downloads.length;
+      els.cntAllDownloads.textContent = store.downloads.length;
+    }
+
+    function renderModeSelector() {
+      // Media type buttons
+      els.btnMediaImage.classList.toggle('active', store.mediaType === 'image');
+      els.btnMediaVideo.classList.toggle('active', store.mediaType === 'video');
+
+      // Workflow Mode pills
+      [els.pillModeText, els.pillModeSingle, els.pillModePaired].forEach(p => {
+        p.classList.toggle('active', p.dataset.mode === store.mode);
+      });
+
+      // Summary label
+      const mediaLabel = store.mediaType === 'image' ? 'Image' : 'Video';
+      const modeLabels = { text: 'Text-Only (1:0)', single: 'Single Ref (1:N)', paired: 'Paired (1:1)' };
+      els.lblModeSummary.textContent = `${mediaLabel} • ${modeLabels[store.mode]}`;
+
+      // Reference asset visibility
+      if (store.mode === 'text') {
+        els.refAssetContainer.style.display = 'none';
+      } else {
+        els.refAssetContainer.style.display = 'flex';
+        const curr = store.sampleRefs[store.refIndex];
+        els.refFileName.textContent = curr.name;
+        els.refFileSize.textContent = `${curr.size} • ${curr.dim}`;
+        els.refThumbPreview.style.borderColor = curr.color;
+        els.refThumbPreview.textContent = store.mode === 'paired' ? 'PAIR' : '1:N';
+      }
+    }
+
+    function renderQueue() {
+      renderCounters();
+
+      // Progress bar calculation
+      const total = store.queue.length;
+      const done = store.queue.filter(j => j.status === 'completed').length;
+      const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+      els.queueProgressBar.style.width = `${pct}%`;
+      els.queueProgressPct.textContent = `${pct}%`;
+      els.queueProgressLabel.textContent = `Queue Progress: ${done} of ${total} Completed`;
+
+      // Status button
+      els.btnToggleQueue.classList.toggle('btn-danger', store.queueRunning);
+      els.btnToggleQueue.classList.toggle('btn-primary', !store.queueRunning);
+      els.lblToggleQueue.textContent = store.queueRunning ? 'Pause Queue' : 'Start Queue';
+
+      // Queue list items
+      if (store.queue.length === 0) {
+        els.queueListContainer.innerHTML = `
+          <div style="text-align: center; padding: 32px 16px; color: var(--text-muted); font-size: 11.5px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 8px; opacity: 0.5;">
+              <path d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+            <div>No jobs in queue</div>
+            <div style="font-size: 10px; opacity: 0.7; margin-top: 4px;">Add prompts in the Create tab to start generating</div>
+          </div>
+        `;
+        return;
+      }
+
+      els.queueListContainer.innerHTML = store.queue.map((job, idx) => {
+        const isRunning = job.status === 'running';
+        const mediaIcon = job.mediaType === 'image'
+          ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>'
+          : '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>';
+
+        return `
+          <div class="queue-item ${job.status}" id="queueItem_${job.id}">
+            <div class="queue-item-header">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span class="job-id">#${idx + 1} ${job.id}</span>
+                <span style="display: inline-flex; align-items: center; gap: 3px; font-size: 9.5px; font-family: var(--font-mono); color: var(--text-muted);">
+                  ${mediaIcon} ${job.mode.toUpperCase()}
+                </span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span class="status-badge ${job.status}">${job.status}</span>
+                <div class="queue-actions">
+                  <button class="icon-btn" onclick="moveJob('${job.id}', -1)" title="Move Up" ${idx === 0 ? 'disabled' : ''}>▲</button>
+                  <button class="icon-btn" onclick="moveJob('${job.id}', 1)" title="Move Down" ${idx === total - 1 ? 'disabled' : ''}>▼</button>
+                  <button class="icon-btn" onclick="deleteJob('${job.id}')" title="Delete">✕</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="queue-prompt-text">${job.prompt}</div>
+
+            ${isRunning ? `
+              <div class="progress-bar-wrap">
+                <div class="progress-bar-fill animated" style="width: ${job.progress}%;"></div>
+              </div>
+            ` : ''}
+
+            <div class="queue-meta-row">
+              <span class="jev-score-pill" title="Jev 1.13 System One Decision">
+                ⚡ Jev: ${job.jevDecision}
+              </span>
+              <span>${job.refAsset ? `Ref: ${job.refAsset}` : 'Text only'}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      renderTelemetry();
+    }
+
+    function renderDownloads() {
+      renderCounters();
+
+      if (store.downloads.length === 0) {
+        els.downloadsGridContainer.innerHTML = `
+          <div style="grid-column: span 2; text-align: center; padding: 32px 16px; color: var(--text-muted); font-size: 11.5px;">
+            No completed media yet. Start queue to simulate completion.
+          </div>
+        `;
+        return;
+      }
+
+      els.downloadsGridContainer.innerHTML = store.downloads.map(dl => {
+        const isVid = dl.mediaType === 'video';
+        return `
+          <div class="download-card">
+            <div class="download-thumb">
+              <svg viewBox="0 0 100 60" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="g_${dl.id}" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="${dl.accentColor}" stop-opacity="0.8"/>
+                    <stop offset="100%" stop-color="#11141c" stop-opacity="0.9"/>
+                  </linearGradient>
+                </defs>
+                <rect width="100" height="60" fill="url(#g_${dl.id})"/>
+                <circle cx="50" cy="30" r="${isVid ? 12 : 16}" fill="rgba(255,255,255,0.15)"/>
+                ${isVid ? '<polygon points="46,24 58,30 46,36" fill="#fff"/>' : '<rect x="42" y="22" width="16" height="16" rx="2" fill="#fff" opacity="0.8"/>'}
+              </svg>
+              <span class="download-badge">${dl.resolution}</span>
+            </div>
+            <div class="download-info">
+              <div class="download-filename" title="${dl.filename}">${dl.filename}</div>
+              <div class="download-meta">
+                <span>Seed: ${dl.seed}</span>
+                <span>${dl.timestamp}</span>
+              </div>
+              <button class="btn btn-sm btn-secondary" onclick="simulateDownload('${dl.id}')" style="margin-top: 4px; width: 100%;">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                <span>Save File</span>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      renderTelemetry();
+    }
+
+    function renderTelemetry() {
+      if (store.viewport === 'desktop') {
+        const cleanState = {
+          variant: store.variant,
+          activeTab: store.activeTab,
+          mediaType: store.mediaType,
+          mode: store.mode,
+          queueRunning: store.queueRunning,
+          queueCount: store.queue.length,
+          downloadsCount: store.downloads.length,
+          queueSample: store.queue.slice(0, 3).map(q => ({ id: q.id, status: q.status, prompt: q.prompt.substring(0, 40) + '...' })),
+          settings: {
+            endpoint: store.settings.endpoint,
+            modelId: store.settings.modelId,
+            apiKey: 'sk-9r••••••••••••3982 (MASKED)',
+            consentGiven: store.settings.consentGiven,
+            lastPing: store.settings.lastPingStatus
+          }
+        };
+        els.stateTelemetryPre.textContent = JSON.stringify(cleanState, null, 2);
+      }
+    }
+
+    // ==========================================================================
+    // ACTION HANDLERS
+    // ==========================================================================
+    window.moveJob = function(jobId, direction) {
+      const idx = store.queue.findIndex(j => j.id === jobId);
+      if (idx === -1) return;
+      const targetIdx = idx + direction;
+      if (targetIdx < 0 || targetIdx >= store.queue.length) return;
+      const temp = store.queue[idx];
+      store.queue[idx] = store.queue[targetIdx];
+      store.queue[targetIdx] = temp;
+      renderQueue();
+      showToast(`Job ${jobId} moved ${direction > 0 ? 'down' : 'up'}`);
+    };
+
+    window.deleteJob = function(jobId) {
+      store.queue = store.queue.filter(j => j.id !== jobId);
+      renderQueue();
+      showToast(`Removed job ${jobId}`);
+    };
+
+    window.simulateDownload = function(dlId) {
+      const dl = store.downloads.find(d => d.id === dlId);
+      if (!dl) return;
+      showToast(`Simulated browser save for ${dl.filename}`);
+    };
+
+    // Queue Progression Simulator
+    function stepQueueOneTick() {
+      const runningJob = store.queue.find(j => j.status === 'running');
+      if (runningJob) {
+        runningJob.progress += 25;
+        if (runningJob.progress >= 100) {
+          runningJob.status = 'completed';
+          runningJob.progress = 100;
+          // Add to downloads
+          const newDl = {
+            id: `DL-${Math.floor(800 + Math.random() * 199)}`,
+            jobId: runningJob.id,
+            filename: `meta_${runningJob.mediaType === 'video' ? 'vid' : 'img'}_${runningJob.id}.${runningJob.mediaType === 'video' ? 'mp4' : 'png'}`,
+            mediaType: runningJob.mediaType,
+            resolution: runningJob.mediaType === 'video' ? '1080p 24fps' : '1024×1024',
+            seed: String(Math.floor(10000000 + Math.random() * 90000000)),
+            prompt: runningJob.prompt,
+            accentColor: runningJob.mediaType === 'video' ? '#10b981' : '#3b82f6',
+            timestamp: new Date().toTimeString().split(' ')[0]
+          };
+          store.downloads.unshift(newDl);
+          showToast(`Completed ${runningJob.id} -> Saved to Downloads`);
+        }
+        renderQueue();
+        renderDownloads();
+        return;
+      }
+
+      // If no running job, pick next pending
+      const nextPending = store.queue.find(j => j.status === 'pending');
+      if (nextPending) {
+        nextPending.status = 'running';
+        nextPending.progress = 15;
+        renderQueue();
+        return;
+      }
+
+      // If no pending, stop running
+      if (store.queueRunning) {
+        store.queueRunning = false;
+        clearInterval(store.queueTimer);
+        store.queueTimer = null;
+        renderQueue();
+        showToast('All queue jobs completed!');
+      }
+    }
+
+    function toggleQueue() {
+      store.queueRunning = !store.queueRunning;
+      if (store.queueRunning) {
+        store.queueTimer = setInterval(stepQueueOneTick, 700);
+        showToast('Queue started (Simulated worker active)');
+      } else {
+        clearInterval(store.queueTimer);
+        store.queueTimer = null;
+        showToast('Queue paused');
+      }
+      renderQueue();
+    }
+
+    // Export CSV simulation
+    function exportCsv() {
+      const headers = ['job_id', 'media_type', 'mode', 'status', 'jev_score', 'prompt', 'created_at'];
+      const rows = store.queue.map(j => [
+        j.id,
+        j.mediaType,
+        j.mode,
+        j.status,
+        j.jevScore,
+        `"${j.prompt.replace(/"/g, '""')}"`,
+        j.createdAt
+      ]);
+      const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `meta_automator_jobs_${Date.now()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('Exported sanitized CSV metadata (no secrets)');
+    }
+
+    // ==========================================================================
+    // INITIALIZATION & EVENT WIRING
+    // ==========================================================================
+    function init() {
+      readUrlParams();
+
+      // Tab navigation
+      els.tabBtnCreate.addEventListener('click', () => { store.activeTab = 'create'; renderTabs(); });
+      els.tabBtnQueue.addEventListener('click', () => { store.activeTab = 'queue'; renderTabs(); });
+      els.tabBtnDownloads.addEventListener('click', () => { store.activeTab = 'downloads'; renderTabs(); });
+      els.tabBtnSettings.addEventListener('click', () => { store.activeTab = 'settings'; renderTabs(); });
+
+      // Variant switcher
+      els.btnVarA.addEventListener('click', () => { store.variant = 'A'; renderVariantAndTheme(); });
+      els.btnVarB.addEventListener('click', () => { store.variant = 'B'; renderVariantAndTheme(); });
+      els.btnVarC.addEventListener('click', () => { store.variant = 'C'; renderVariantAndTheme(); });
+
+      // Viewport switcher
+      els.btnViewSidepanel.addEventListener('click', () => { store.viewport = 'sidepanel'; renderVariantAndTheme(); });
+      els.btnViewDesktop.addEventListener('click', () => { store.viewport = 'desktop'; renderVariantAndTheme(); });
+
+      // Reset state
+      els.btnResetState.addEventListener('click', () => {
+        if (confirm('Reset prototype state to initial values?')) {
+          clearInterval(store.queueTimer);
+          store.queueRunning = false;
+          window.location.search = '';
+        }
+      });
+
+      // Media target selector
+      els.btnMediaImage.addEventListener('click', () => { store.mediaType = 'image'; renderModeSelector(); });
+      els.btnMediaVideo.addEventListener('click', () => { store.mediaType = 'video'; renderModeSelector(); });
+
+      // Workflow Mode selector
+      els.pillModeText.addEventListener('click', () => { store.mode = 'text'; renderModeSelector(); });
+      els.pillModeSingle.addEventListener('click', () => { store.mode = 'single'; renderModeSelector(); });
+      els.pillModePaired.addEventListener('click', () => { store.mode = 'paired'; renderModeSelector(); });
+
+      // Reference asset cycler
+      els.btnCycleMockRef.addEventListener('click', () => {
+        store.refIndex = (store.refIndex + 1) % store.sampleRefs.length;
+        renderModeSelector();
+        showToast(`Selected asset: ${store.sampleRefs[store.refIndex].name}`);
+      });
+
+      // Text prompts counting
+      function updatePromptCount() {
+        const lines = els.txtPrompts.value.split('\n').filter(l => l.trim().length > 0);
+        const count = lines.length;
+        els.promptLineCount.textContent = `${count} prompt${count === 1 ? '' : 's'} ready`;
+        els.btnEnqueueCount.textContent = count;
+      }
+      els.txtPrompts.addEventListener('input', updatePromptCount);
+
+      // Load sample prompts
+      els.btnLoadSamplePrompts.addEventListener('click', () => {
+        els.txtPrompts.value = [
+          'Ultra-detailed macro shot of raindrops on autumn maple leaf, 8k raytracing',
+          'Cyberpunk street food stall vendor in rainy Neo-Tokyo, volumetric steam',
+          'Cinematic portrait of Thai silk weaver in golden afternoon sunlight, shallow focus'
+        ].join('\n');
+        updatePromptCount();
+        showToast('Loaded 3 sample prompts');
+      });
+
+      // Prompt template helper
+      els.btnOpenPromptHelper.addEventListener('click', () => {
+        const isHidden = els.promptHelperCard.style.display === 'none';
+        els.promptHelperCard.style.display = isHidden ? 'block' : 'none';
+      });
+
+      els.btnAppendTemplatePrompt.addEventListener('click', () => {
+        const theme = els.selStyleTheme.options[els.selStyleTheme.selectedIndex].text;
+        const lighting = els.selLighting.options[els.selLighting.selectedIndex].text;
+        const generated = `Architectural study of glass conservatory, ${theme}, lit with ${lighting}, master composition`;
+        els.txtPrompts.value = els.txtPrompts.value.trim() ? els.txtPrompts.value + '\n' + generated : generated;
+        updatePromptCount();
+        showToast('Appended template prompt');
+      });
+
+      // Import .txt file simulation
+      els.btnImportTxt.addEventListener('click', () => {
+        els.txtPrompts.value = [
+          'Nordic pine forest shrouded in dense morning mist, high dynamic range',
+          'Vintage brass telescope pointing at lunar craters, dark observatory',
+          'Minimalist ceramic vase with single white peony on concrete pedestal'
+        ].join('\n');
+        updatePromptCount();
+        showToast('Simulated .txt bulk import (3 lines parsed)');
+      });
+
+      // Jev Quality Evaluation Simulation
+      els.btnEvalJev.addEventListener('click', () => {
+        const lines = els.txtPrompts.value.split('\n').filter(l => l.trim().length > 0);
+        if (lines.length === 0) {
+          els.jevEvalResult.innerHTML = '<span style="color: var(--status-danger);">⚠️ Enter at least 1 prompt to evaluate</span>';
+          return;
+        }
+        els.jevEvalResult.innerHTML = '<span style="color: #c084fc;">⚡ Simulating 9router Jev System One evaluation (~140ms)...</span>';
+        setTimeout(() => {
+          const score = Math.floor(82 + Math.random() * 15);
+          els.jevEvalResult.innerHTML = `
+            <div style="background: rgba(157, 92, 255, 0.15); padding: 8px; border-radius: 4px; border: 1px solid rgba(157, 92, 255, 0.4);">
+              <div style="font-weight: 600; color: #d8b4fe; margin-bottom: 2px;">
+                ✓ Jev Typed Decision: score=${score}/100 • noul=false (PASS)
+              </div>
+              <div style="font-size: 10px; color: #e9d5ff;">
+                Classification: <code>choice: creative_composition</code> | Rubric: High clarity, no prompt injection detected. Ready for queue.
+              </div>
+            </div>
+          `;
+        }, 300);
+      });
+
+      // Add Prompts to Queue
+      els.btnEnqueuePrompts.addEventListener('click', () => {
+        const lines = els.txtPrompts.value.split('\n').filter(l => l.trim().length > 0);
+        if (lines.length === 0) {
+          showToast('Please enter at least one prompt');
+          return;
+        }
+
+        // Validate Paired Mode constraint: N prompts requires N references (in mock, we check reference availability)
+        if (store.mode === 'paired' && lines.length > 5) {
+          alert('Paired Mode Notice: In 1:1 paired mode, line count should match uploaded image count. (Validated by client schema)');
+        }
+
+        const newJobs = lines.map((line, idx) => ({
+          id: `JOB-${Math.floor(210 + Math.random() * 890)}`,
+          mediaType: store.mediaType,
+          mode: store.mode,
+          prompt: line,
+          refAsset: store.mode === 'text' ? null : store.sampleRefs[store.refIndex].name,
+          status: 'pending',
+          progress: 0,
+          jevScore: Math.floor(80 + Math.random() * 18),
+          jevDecision: `score: ${Math.floor(80 + Math.random() * 18)}/100 (ready)`,
+          createdAt: new Date().toTimeString().split(' ')[0]
+        }));
+
+        store.queue.push(...newJobs);
+        els.txtPrompts.value = '';
+        updatePromptCount();
+        renderQueue();
+        store.activeTab = 'queue';
+        renderTabs();
+        showToast(`Added ${newJobs.length} jobs to Queue!`);
+      });
+
+      // Queue action buttons
+      els.btnToggleQueue.addEventListener('click', toggleQueue);
+      els.btnStepQueue.addEventListener('click', () => {
+        stepQueueOneTick();
+        showToast('Stepped 1 job tick');
+      });
+      els.btnSimulateError.addEventListener('click', () => {
+        if (store.queueRunning) {
+          store.queueRunning = false;
+          clearInterval(store.queueTimer);
+          store.queueTimer = null;
+        }
+        els.queueStatusAlert.style.display = 'block';
+        els.queueStatusAlert.style.background = 'var(--status-danger-subtle)';
+        els.queueStatusAlert.style.color = '#fca5a5';
+        els.queueStatusAlert.style.border = '1px solid rgba(239,68,68,0.3)';
+        els.queueStatusAlert.innerHTML = '🛑 <strong>Queue Paused by Safety Gate:</strong> Upstream Rate-Limit (429) / Meta login verification challenge simulated. No silent retries.';
+        renderQueue();
+        showToast('Simulated 429 Challenge halt');
+      });
+      els.btnClearCompleted.addEventListener('click', () => {
+        store.queue = store.queue.filter(j => j.status !== 'completed');
+        renderQueue();
+        showToast('Cleared completed jobs');
+      });
+
+      // Downloads buttons
+      els.btnDownloadAll.addEventListener('click', () => {
+        showToast(`Simulated batch download of ${store.downloads.length} files as ZIP archive`);
+      });
+      els.btnExportCsv.addEventListener('click', exportCsv);
+      els.btnFilterAllMedia.addEventListener('click', () => renderDownloads());
+      els.btnFilterImages.addEventListener('click', () => {
+        const filtered = store.downloads.filter(d => d.mediaType === 'image');
+        showToast(`Showing ${filtered.length} image downloads`);
+      });
+      els.btnFilterVideos.addEventListener('click', () => {
+        const filtered = store.downloads.filter(d => d.mediaType === 'video');
+        showToast(`Showing ${filtered.length} video downloads`);
+      });
+
+      // Settings actions
+      els.btnToggleKeyMask.addEventListener('click', () => {
+        const isPass = els.cfgApiKey.type === 'password';
+        els.cfgApiKey.type = isPass ? 'text' : 'password';
+        els.btnToggleKeyMask.textContent = isPass ? 'Hide' : 'Show';
+      });
+
+      els.btnSetDummyKey.addEventListener('click', () => {
+        els.cfgApiKey.value = 'sk-9r-dummy-mock-key-approved-4821';
+        showToast('Set valid dummy key format');
+      });
+
+      els.btnTestConnection.addEventListener('click', () => {
+        els.testPingOutput.style.display = 'block';
+        els.testPingOutput.textContent = 'Pinging https://9router.bangkhan.com/v1/systemone (simulated latency)...';
+        setTimeout(() => {
+          store.settings.lastPingStatus = '200 OK • 138ms';
+          els.testPingOutput.innerHTML = `
+            <div style="color: #6ee7b7; font-weight: 600;">✓ 200 OK • Latency: 138ms (Simulated)</div>
+            <div style="color: #94a3b8; font-size: 10px; margin-top: 4px;">
+              Response: { "status": "active", "model": "jev-latest", "quota_remaining": 99.8% }<br>
+              Note: Key verified extension-local only. Pinned endpoint strict match.
+            </div>
+          `;
+          renderTelemetry();
+          showToast('Connection test succeeded (Simulated 200 OK)');
+        }, 400);
+      });
+
+      els.btnSaveSettings.addEventListener('click', () => {
+        store.settings.apiKey = els.cfgApiKey.value;
+        store.settings.consentGiven = els.chkConsent.checked;
+        showToast('Saved Settings in-memory');
+      });
+
+      els.btnResetSettings.addEventListener('click', () => {
+        els.cfgApiKey.value = 'sk-9r-sample-key-mock-valid-3982';
+        els.chkConsent.checked = true;
+        showToast('Settings reset to defaults');
+      });
+
+      // Copy telemetry JSON
+      els.btnCopyState.addEventListener('click', () => {
+        navigator.clipboard.writeText(els.stateTelemetryPre.textContent).then(() => {
+          showToast('State JSON copied to clipboard');
+        }).catch(() => {
+          showToast('Unable to copy');
+        });
+      });
+
+      // Guided Walkthrough Demo Button
+      els.btnRunWalkthrough.addEventListener('click', () => {
+        // Step 1: Switch to Paired mode
+        store.mediaType = 'image';
+        store.mode = 'paired';
+        renderModeSelector();
+
+        // Step 2: Fill sample paired prompts
+        els.txtPrompts.value = [
+          'High fashion editorial in cyberpunk neon marketplace with reflective rain puddle',
+          'Serene zen garden bamboo fountain in early autumn mist with red maple leaves'
+        ].join('\n');
+        updatePromptCount();
+
+        // Step 3: Trigger Jev eval
+        els.btnEvalJev.click();
+
+        showToast('Guided Tour Step 1: Paired Mode configured with Jev scoring!');
+      });
+
+      // Initial defaults
+      els.txtPrompts.value = [
+        'A sleek ceramic coffee cup with steam curling into morning light',
+        'Traditional Thai silk pattern woven with subtle fiber optic threads',
+        'A futuristic android barista preparing espresso in neon Tokyo cafe'
+      ].join('\n');
+      updatePromptCount();
+
+      renderVariantAndTheme();
+      renderTabs();
+      renderModeSelector();
+      renderQueue();
+      renderDownloads();
+    }
+
+    // Run on load
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
